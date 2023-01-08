@@ -1,0 +1,1 @@
+./network.sh deployCC -ccn rps2 -ccp ../rps/chaincode-java -ccl java -ccep "OR('Org1MSP.peer','Org2MSP.peer')" -verbose -c channel3

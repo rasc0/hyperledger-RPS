@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="8.37">
+<file name="/Users/oscar/go/src/fabric-samples/rps/chaincode-java/src/main/java/org/hyperledger/fabric/samples/assettransfer/Game.java">
+</file>
+<file name="/Users/oscar/go/src/fabric-samples/rps/chaincode-java/src/main/java/org/hyperledger/fabric/samples/assettransfer/GameTransfer.java">
+</file>
+</checkstyle>
