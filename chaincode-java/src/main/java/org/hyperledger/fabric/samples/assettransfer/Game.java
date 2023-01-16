@@ -1,15 +1,11 @@
 package org.hyperledger.fabric.samples.assettransfer;
 
-import java.util.Map;
 import java.util.Objects;
 
 import org.hyperledger.fabric.contract.annotation.DataType;
 import org.hyperledger.fabric.contract.annotation.Property;
-import org.json.JSONObject;
 
 import com.owlike.genson.annotation.JsonProperty;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 @DataType()
@@ -64,24 +60,49 @@ public final class Game {
         return winner;
     }
 
-    public void setMove(final String player, final String move) {
-        if (this.player1 == null) {
-            this.player1 = player;
-            this.player1Move = move;
-        } else if (this.player2 == null) {
-            this.player2 = player;
-            this.player2Move = move;
-        }
-    }
-
     public void setWinner(final String newWinner) {
         this.winner = newWinner;
-        this.status = "CLOSED";
     }
 
-    public Game(@JsonProperty("gameID") final String gameID) {
+    public void setStatus(final String newStatus) {
+        this.status = newStatus;
+    }
+
+    public void setPlayer1(final String newPlayer) {
+        this.player1 = newPlayer;
+    }
+
+    public void setPlayer2(final String newPlayer) {
+        this.player2 = newPlayer;
+    }
+
+    public void setPlayer1Move(final String newMove) {
+        this.player1Move = newMove;
+    }
+
+    public void setPlayer2Move(final String newMove) {
+        this.player2Move = newMove;
+    }
+
+    public Game(@JsonProperty("gameID") final String gameID, @JsonProperty("status") final String status) {
         this.gameID = gameID;
-        this.status = "OPEN";
+        this.status = status;
+    }
+
+    public Game(@JsonProperty("gameID") final String gameID,
+    @JsonProperty("player1") final String player1,
+    @JsonProperty("player2") final String player2,
+    @JsonProperty("player1Move") final String player1Move,
+    @JsonProperty("player2Move") final String player2Move,
+    @JsonProperty("status") final String status,
+    @JsonProperty("winner") final String winner) {
+        this.gameID = gameID;
+        this.player1 = player1;
+        this.player2 = player2;
+        this.player1Move = player1Move;
+        this.player2Move = player2Move;
+        this.status = status;
+        this.winner = winner;
     }
 
     @Override
@@ -108,25 +129,27 @@ public final class Game {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() +  " GAMEID: " + gameID
-        + "\nPlayer1: " + player1 + " move: " + (this.player1Move != null ? this.player1Move : "None")
-        + "\nPlayer2: " + player2 + " move: " + (this.player2Move != null ? this.player2Move : "None")
+        return this.getClass().getSimpleName() +  "\nGAMEID: " + gameID
+        + "\nPlayer1: " + player1
+        + "\nPlayer1 Move: " + this.player1Move
+        + "\nPlayer2: " + player2
+        + "\nPlayer2 Move: " + this.player2Move
         + "\nStatus: " + status
         + "\nWinner: " + winner + "\n";
     }
 
-    public static Game deserialize(final byte[] gameJSON) {
-        return deserialize(new String(gameJSON, UTF_8));
-    }
+    // public static Game deserialize(final byte[] gameJSON) {
+    //     return deserialize(new String(gameJSON, UTF_8));
+    // }
 
-    public static Game deserialize(final String gameJSON) {
+    // public static Game deserialize(final String gameJSON) {
 
-        JSONObject json = new JSONObject(gameJSON);
-        Map<String, Object> tMap = json.toMap();
-        final String id = (String) tMap.get("gameID");
+    //     JSONObject json = new JSONObject(gameJSON);
+    //     Map<String, Object> tMap = json.toMap();
+    //     final String id = (String) tMap.get("gameID");
 
-        return new Game(id);
-    }
+    //     return new Game(id);
+    // }
 
     // public byte[] serialize() {
     //     return serialize(null).getBytes(UTF_8);
