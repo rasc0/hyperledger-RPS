@@ -2,7 +2,7 @@
 
 const { Gateway } = require('fabric-network');
 const path = require('path');
-const { myChaincodeName, myChannel } = require('./util.js');
+const { myChaincodeName, myChannel, prettyJSONString } = require('./util.js');
 
 async function playGame(ccp,wallet,user,gameID) {
 	try {
@@ -16,15 +16,13 @@ async function playGame(ccp,wallet,user,gameID) {
 		const network = await gateway.getNetwork(myChannel);
 		const contract = network.getContract(myChaincodeName);
 
-		let statefulTxn = contract.createTransaction('PlayGame');
-
 		console.log('\n--> Submit Transaction: Play game');
-		await statefulTxn.submit(gameID);
+		let result = await contract.submitTransaction('PlayGame', gameID);
 		console.log('*** Result: committed');
 
-		console.log('\n--> Evaluate Transaction: query the game that was just played');
-		let result = await contract.evaluateTransaction('QueryGame', gameID);
-		console.log('*** Result: Game: ' + result.toString());
+		console.log('\n--> Evaluate Transaction: query the game that was just modified');
+		result = await contract.evaluateTransaction('QueryGame', gameID);
+		console.log(`*** Result: ${prettyJSONString(result.toString())}`)
 
 		gateway.disconnect();
 	} catch (error) {

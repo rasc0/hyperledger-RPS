@@ -33,16 +33,27 @@ public final class GameTransfer implements ContractInterface {
 
     private final Genson genson = new Genson();
 
+    @Transaction
+    public void DeleteGame(final Context ctx, final String gameID) {
+        ChaincodeStub stub = ctx.getStub();
+
+        try {
+            stub.delState(gameID);
+        } catch (Exception e) {
+            System.out.println("Couldn't delete game " + gameID);
+            System.out.println(e.getMessage());
+        }
+    }
+
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public void CreateGame(final Context ctx, final String gameID) {
         ChaincodeStub stub = ctx.getStub();
 
-        Game game = new Game(gameID);
+        Game game = new Game(gameID, "OPEN");
 
-       // byte[] gameJson = game.serialize();
-        byte[] gameJson = genson.serializeBytes(game);
+        String gameJson = genson.serialize(game);
 
-        stub.putState(gameID, gameJson); // Add to the global state
+        stub.putStringState(gameID, gameJson);
     }
 
     @Transaction(intent = Transaction.TYPE.EVALUATE)
@@ -72,6 +83,8 @@ public final class GameTransfer implements ContractInterface {
         String p1 = game.getPlayer1Move();
         String p2 = game.getPlayer2Move();
 
+        System.out.println(String.format("Player1 move: %s\nPlayer2 move: %s", p1, p2));
+
         // security consideration - not checking the user's input and depending on how (order) that game is evaluated could lead to default win
         if ((p1 == "rock" && p2 == "scissors") || (p1 == "scissors" && p2 == "paper") || (p1 == "paper" && p2 == "rock")) {
             game.setWinner(game.getPlayer1());
@@ -81,31 +94,58 @@ public final class GameTransfer implements ContractInterface {
             game.setWinner(game.getPlayer2());
         }
 
-        //byte[] gameJson = game.serialize();
-        byte[] gameJson = genson.serializeBytes(game);
+        game.setStatus("PLAYED");
 
-        stub.putState(gameID, gameJson);
+        //byte[] gameJson = game.serialize();
+        String gameJson = genson.serialize(game);
+
+        stub.putStringState(gameID, gameJson);
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public void SubmitMove(final Context ctx, final String gameID, final String user, final String move) {
         ChaincodeStub stub = ctx.getStub();
 
-        Game game = getState(ctx, gameID);
+        Game oldGame = getState(ctx, gameID);
 
-        game.setMove(user, move);
+        System.out.println("OLD GAME: \n" + oldGame.toString());
 
-        byte[] gameJson = genson.serializeBytes(game);
-        //byte[] gameJson = game.serialize();
+        //oldGame = setMove(user, move, oldGame);
 
-        stub.putState(gameID, gameJson);
+        //Game newGame = new Game(gameID, oldGame.getPlayer1(), oldGame.getPlayer2(), oldGame.getPlayer1Move(), oldGame.getPlayer2Move(), "OPEN", null);
+
+        if (oldGame.getPlayer1() == null) {
+            System.out.println("Setting move: player1 null");
+            oldGame.setPlayer1(user);
+            oldGame.setPlayer1Move(move);
+        } else if (oldGame.getPlayer2() == null) {
+            System.out.println("Setting move: player2 null");
+            oldGame.setPlayer2(user);
+            oldGame.setPlayer2Move(move);
+        }
+
+        System.out.println("NEW GAME: \n" + oldGame.toString());
+
+        String gameJson = genson.serialize(oldGame);
+
+        stub.putStringState(gameID, gameJson);
     }
 
     @Transaction(intent = Transaction.TYPE.EVALUATE)
-    public String QueryGame(final Context ctx, final String gameID) {
-        Game game = getState(ctx, gameID);
+    public Game QueryGame(final Context ctx, final String gameID) {
+        ChaincodeStub stub = ctx.getStub();
 
-        return game.toString();
+        String gameJSON = stub.getStringState(gameID);
+
+        if (gameJSON == null || gameJSON.isEmpty()) {
+            String errorMessage = String.format("Asset %s does not exist", gameID);
+            System.out.println(errorMessage);
+            throw new ChaincodeException(errorMessage);
+        }
+
+        Game game = genson.deserialize(gameJSON, Game.class);
+
+        return game;
     }
 
     private Game getState(final Context ctx, final String gameID) {
@@ -117,10 +157,25 @@ public final class GameTransfer implements ContractInterface {
         }
 
         try {
-            Game game = Game.deserialize(assetJSON);
+            Game game = genson.deserialize(assetJSON, Game.class);
             return game;
         } catch (Exception e) {
             throw new ChaincodeException("Deserialize error: " + e.getMessage());
         }
+    }
+
+    private Game setMove(final String player, final String move, final Game oldGame) {
+
+        if (oldGame.getPlayer1() == null) {
+            System.out.println("Setting move: player1 null");
+            oldGame.setPlayer1(player);
+            oldGame.setPlayer1Move(move);
+        } else if (oldGame.getPlayer2() == null) {
+            System.out.println("Setting move: player2 null");
+            oldGame.setPlayer2(player);
+            oldGame.setPlayer2Move(move);
+        }
+
+        return oldGame;
     }
 }
