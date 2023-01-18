@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require("express");
 const { connectToOrg1CA, connectToOrg2CA } = require('../enrollAdmin.js');
 const { registerOrg1User, registerOrg2User } = require('../registerEnrollUser');
@@ -27,15 +29,9 @@ let gameID;
 let gameIndex = 0; // gets incremented on playGame()
 let gameInProgress = false;
 
-app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
-});
+let movesPlayed = 0;
 
-app.get("/api", (req, res) => {
-    res.json({ message: "Hello from server!" });
-});
-
-app.post("/api/init", async (req, res) => {
+async function init() {
   console.log("---------- Building ccps ----------");
   ccp1 = buildCCPOrg1();
   ccp2 = buildCCPOrg2();
@@ -57,20 +53,30 @@ app.post("/api/init", async (req, res) => {
 
   await registerOrg2User("player2");
   console.log("---------- Init done ----------");
+}
+
+app.listen(PORT, () => {
+  init();
+  console.log(`Server listening on ${PORT}`);
+});
+
+app.get("/api", (req, res) => {
+    res.json({ message: "Hello from server!" });
 });
 
 // Create game
 app.post("/api/createGame", async (req, res) => {
   console.log("CREATING GAME");
   if(gameInProgress) {
+    console.log("Game in already in progress... " + gameID);
     return;
   }
 
   gameInProgress = true;
   gameID = "game" + gameIndex;
 
-  const org = req.body.org;
-  const user = req.body.user;
+  let org = req.body.org;
+  let user = req.body.user;
 
   console.log(org);
   console.log(user);
@@ -83,12 +89,41 @@ app.post("/api/createGame", async (req, res) => {
   }
 
   console.log("Game created: " + gameID);
-})
+  res.send({id: gameID});
+});
 
 // Submit move + play game if both moves submitted
 app.post("/api/submitMove", async (req, res) => {
-  
+  const org = req.body.org;
+  const user = req.body.user;
+  const move = req.body.move;
+  console.log("Move submitted by:" + user);
+  console.log(move);
+
+  if(org == "org1") {
+    await submitMove(ccp1, walletOrg1, user, gameID, move);
+  } else {
+    await submitMove(ccp2, walletOrg2, user, gameID, move);
+  }
 
   gameInProgress = false;
   gameIndex++;
-})
+  movesPlayed++;
+
+  if(movesPlayed == 2) {
+    console.log("PLAYING GAME");
+    movesPlayed = 0;
+    if(org == "org1") {
+      await playGame(ccp1, walletOrg1, user, gameID);
+
+    } else {
+      await playGame(ccp2, walletOrg2, user, gameID);
+    }
+  }
+});
+
+app.get("/api/gameInProgress", async (req, res) => {
+  let response = {inProgress: gameInProgress, id: gameID};
+
+  res.send(response);
+});
