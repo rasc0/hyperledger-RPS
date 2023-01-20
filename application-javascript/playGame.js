@@ -24,9 +24,10 @@ async function playGame(ccp,wallet,user,gameID) {
 		result = await contract.evaluateTransaction('QueryGame', gameID);
 		console.log(`*** Result: ${prettyJSONString(result.toString())}`)
 
-		gateway.disconnect();
 	} catch (error) {
 		console.error(`******** FAILED to play Game: ${error}`);
+	} finally {
+		gateway.disconnect();
 	}
 }
 

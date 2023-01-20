@@ -14,9 +14,6 @@ import { Home } from "./home";
  */
 
 function App() {
-
-  fetch("http://localhost:3001/api/init", {method: 'POST'});
-
   return (
     <BrowserRouter>
             <Routes>

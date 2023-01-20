@@ -26,10 +26,12 @@ async function createGame(ccp,wallet,user,gameID) {
 		let result = await contract.evaluateTransaction('QueryGame', gameID);
 		console.log(`*** Result: ${prettyJSONString(result.toString())}`)
 
-		gateway.disconnect();
 	} catch (error) {
 		console.error(`******** FAILED to create Game: ${error}`);
+	} finally {
+		gateway.disconnect();
 	}
+
 }
 
 module.exports = {createGame};
