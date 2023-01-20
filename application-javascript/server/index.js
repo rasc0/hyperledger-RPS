@@ -10,14 +10,12 @@ const { playGame } = require('../playGame');
 const { Wallets } = require('fabric-network');
 const path = require('path');
 var cors = require('cors');
-// var json = require('express');
 const bp = require('body-parser')
 
 const PORT = process.env.PORT || 3001;
 
 const app = express();
 app.use(cors());
-// app.use(json());
 app.use(bp.json())
 app.use(bp.urlencoded({ extended: true }))
 
@@ -29,7 +27,9 @@ let gameID;
 let gameIndex = 0; // gets incremented on playGame()
 let gameInProgress = false;
 
-let movesPlayed = 0;
+let org1Move = false;
+let org2Move = false; 
+
 
 async function init() {
   console.log("---------- Building ccps ----------");
@@ -101,29 +101,41 @@ app.post("/api/submitMove", async (req, res) => {
   console.log(move);
 
   if(org == "org1") {
+    org1Move = true;
     await submitMove(ccp1, walletOrg1, user, gameID, move);
   } else {
+    org2Move = true;
     await submitMove(ccp2, walletOrg2, user, gameID, move);
   }
 
-  gameInProgress = false;
   gameIndex++;
-  movesPlayed++;
 
-  if(movesPlayed == 2) {
+  if(org1Move && org2Move) {
+    gameInProgress = false;
     console.log("PLAYING GAME");
-    movesPlayed = 0;
+    org1Move = false;
+    org2Move = true;
     if(org == "org1") {
       await playGame(ccp1, walletOrg1, user, gameID);
-
     } else {
       await playGame(ccp2, walletOrg2, user, gameID);
     }
   }
 });
 
-app.get("/api/gameInProgress", async (req, res) => {
-  let response = {inProgress: gameInProgress, id: gameID};
+app.get("/api/gameInProgress/:org", async (req, res) => {
+
+  const org = req.params.org;
+
+  let played = org == "org1" ? org1Move : org2Move;
+
+  let response = {
+    inProgress: gameInProgress, 
+    id: gameID,
+    moveSumbitted: played
+  };
 
   res.send(response);
 });
+
+app.get("/api/")

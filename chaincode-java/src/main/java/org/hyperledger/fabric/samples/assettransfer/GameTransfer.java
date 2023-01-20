@@ -138,7 +138,7 @@ public final class GameTransfer implements ContractInterface {
         String gameJSON = stub.getStringState(gameID);
 
         if (gameJSON == null || gameJSON.isEmpty()) {
-            String errorMessage = String.format("Asset %s does not exist", gameID);
+            String errorMessage = String.format("Game %s does not exist", gameID);
             System.out.println(errorMessage);
             throw new ChaincodeException(errorMessage);
         }
@@ -151,7 +151,7 @@ public final class GameTransfer implements ContractInterface {
     private Game getState(final Context ctx, final String gameID) {
         byte[] assetJSON = ctx.getStub().getState(gameID);
         if (assetJSON == null || assetJSON.length == 0) {
-            String errorMessage = String.format("Asset %s does not exist", gameID);
+            String errorMessage = String.format("Game %s does not exist", gameID);
             System.err.println(errorMessage);
             throw new ChaincodeException(errorMessage);
         }
@@ -162,20 +162,5 @@ public final class GameTransfer implements ContractInterface {
         } catch (Exception e) {
             throw new ChaincodeException("Deserialize error: " + e.getMessage());
         }
-    }
-
-    private Game setMove(final String player, final String move, final Game oldGame) {
-
-        if (oldGame.getPlayer1() == null) {
-            System.out.println("Setting move: player1 null");
-            oldGame.setPlayer1(player);
-            oldGame.setPlayer1Move(move);
-        } else if (oldGame.getPlayer2() == null) {
-            System.out.println("Setting move: player2 null");
-            oldGame.setPlayer2(player);
-            oldGame.setPlayer2Move(move);
-        }
-
-        return oldGame;
     }
 }

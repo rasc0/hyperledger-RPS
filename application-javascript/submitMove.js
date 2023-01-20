@@ -28,9 +28,10 @@ async function submitMove(ccp,wallet,user,gameID, move) {
 		let results = await contract.evaluateTransaction('queryAllGame');
 		console.log('*** Result: Game: ' + results.toString());
 
-		gateway.disconnect();
 	} catch (error) {
 		console.error(`******** FAILED to submit move: ${error}`);
+	}finally {
+		gateway.disconnect();
 	}
 }
 
