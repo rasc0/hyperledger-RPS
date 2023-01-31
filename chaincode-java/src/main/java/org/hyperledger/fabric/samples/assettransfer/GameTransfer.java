@@ -80,19 +80,25 @@ public final class GameTransfer implements ContractInterface {
 
         Game game = getState(ctx, gameID);
 
-        String p1 = game.getPlayer1Move();
-        String p2 = game.getPlayer2Move();
 
-        System.out.println(String.format("Player1 move: %s\nPlayer2 move: %s", p1, p2));
+        //  (1 = Rock, 2 = Paper, 3 = Scissors)
+        int p1 = game.getPlayer1Move();
+        int p2 = game.getPlayer2Move();
 
-        // security consideration - not checking the user's input and depending on how (order) that game is evaluated could lead to default win
-        if ((p1 == "rock" && p2 == "scissors") || (p1 == "scissors" && p2 == "paper") || (p1 == "paper" && p2 == "rock")) {
-            game.setWinner(game.getPlayer1());
-        } else if (p1 == p2) {
+        int[][] result = {{0, 2, 1},
+                        {1, 0, 2},
+                        {2, 1, 0}
+                        };
+
+        int outcome = result[p1 - 1][p2 - 1];
+
+        if (outcome == 0) {
             game.setWinner("TIE");
-        } else {
+          } else if (outcome == 1) {
+            game.setWinner(game.getPlayer1());
+          } else {
             game.setWinner(game.getPlayer2());
-        }
+          }
 
         game.setStatus("PLAYED");
 
@@ -103,7 +109,7 @@ public final class GameTransfer implements ContractInterface {
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public void SubmitMove(final Context ctx, final String gameID, final String user, final String move) {
+    public void SubmitMove(final Context ctx, final String gameID, final String user, final int move) {
         ChaincodeStub stub = ctx.getStub();
 
         Game oldGame = getState(ctx, gameID);

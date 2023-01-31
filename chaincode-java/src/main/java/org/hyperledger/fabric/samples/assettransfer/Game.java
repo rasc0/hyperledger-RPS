@@ -21,10 +21,10 @@ public final class Game {
     private String player2;
 
     @Property()
-    private String player1Move;
+    private int player1Move;
 
     @Property()
-    private String player2Move;
+    private int player2Move;
 
     @Property()
     private String status;
@@ -44,11 +44,11 @@ public final class Game {
         return player2;
     }
 
-    public String getPlayer1Move() {
+    public int getPlayer1Move() {
         return player1Move;
     }
 
-    public String getPlayer2Move() {
+    public int getPlayer2Move() {
         return player2Move;
     }
 
@@ -76,11 +76,11 @@ public final class Game {
         this.player2 = newPlayer;
     }
 
-    public void setPlayer1Move(final String newMove) {
+    public void setPlayer1Move(final int newMove) {
         this.player1Move = newMove;
     }
 
-    public void setPlayer2Move(final String newMove) {
+    public void setPlayer2Move(final int newMove) {
         this.player2Move = newMove;
     }
 
@@ -92,8 +92,8 @@ public final class Game {
     public Game(@JsonProperty("gameID") final String gameID,
     @JsonProperty("player1") final String player1,
     @JsonProperty("player2") final String player2,
-    @JsonProperty("player1Move") final String player1Move,
-    @JsonProperty("player2Move") final String player2Move,
+    @JsonProperty("player1Move") final int player1Move,
+    @JsonProperty("player2Move") final int player2Move,
     @JsonProperty("status") final String status,
     @JsonProperty("winner") final String winner) {
         this.gameID = gameID;
@@ -119,7 +119,11 @@ public final class Game {
 
         return Objects.deepEquals(
                 new String[] {getGameID(), getPlayer1(), getPlayer2(), getStatus(), getWinner()},
-                new String[] {other.getGameID(), other.getPlayer1(), other.getPlayer2(), other.getStatus(), other.getWinner()});
+                new String[] {other.getGameID(), other.getPlayer1(), other.getPlayer2(), other.getStatus(), other.getWinner()})
+                &&
+                Objects.deepEquals(
+                new int[] {getPlayer1Move(), getPlayer2Move()},
+                new int[] {other.getPlayer1Move(), other.getPlayer2Move()});
     }
 
     @Override
@@ -137,33 +141,4 @@ public final class Game {
         + "\nStatus: " + status
         + "\nWinner: " + winner + "\n";
     }
-
-    // public static Game deserialize(final byte[] gameJSON) {
-    //     return deserialize(new String(gameJSON, UTF_8));
-    // }
-
-    // public static Game deserialize(final String gameJSON) {
-
-    //     JSONObject json = new JSONObject(gameJSON);
-    //     Map<String, Object> tMap = json.toMap();
-    //     final String id = (String) tMap.get("gameID");
-
-    //     return new Game(id);
-    // }
-
-    // public byte[] serialize() {
-    //     return serialize(null).getBytes(UTF_8);
-    // }
-
-    // public String serialize(final String privateProps) {
-    //     Map<String, Object> tMap = new HashMap();
-    //     tMap.put("GameID", gameID);
-    //     tMap.put("Player1", player1);
-    //     tMap.put("Player2", player2);
-    //     tMap.put("Player1Move", player1Move);
-    //     tMap.put("Player2Move", player2Move);
-    //     tMap.put("Status", status);
-    //     tMap.put("Winner", winner);
-    //     return new JSONObject(tMap).toString();
-    // }
 }
