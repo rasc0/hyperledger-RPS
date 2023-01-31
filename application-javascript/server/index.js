@@ -151,7 +151,7 @@ app.get("/api/gameInProgress/:org", async (req, res) => {
     inProgress: gameInProgress, 
     id: gameID,
     moveSubmitted: played,
-    winner: (status == "played"? winner : null)
+    winner: (status == "played" ? winner : null)
   };
 
   res.send(response);

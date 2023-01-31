@@ -1,57 +1,71 @@
-import org.hyperledger.fabric.contract.Context;
-import org.hyperledger.fabric.samples.assettransfer.GameTransfer;
-import org.hyperledger.fabric.shim.ChaincodeStub;
-import org.hyperledger.fabric.shim.ChaincodeException;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+package org.hyperledger.fabric.samples.assettransfer;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 public final class GameTest {
 
     @Nested
-    class InvokeQueryGameTransaction {
+    class Equality {
 
         @Test
-        public void whenTestExists() {
-            GameTranser gameTransfer = new GameTransfer();
-            Game gameContract = new Game();
-            Context ctx = mock(Context.class);
-            ChaincodeStub stub = mock(ChaincodeStub.class);
-            when(ctx.getStub()).thenReturn(stub);
-            when(stub.getStringState("game1"))
-                    .thenReturn(new Game("game1").serialize());
+        public void isReflexive() {
+            Game game = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
 
-            Game game = gameTransfer.getState(ctx, "game1");
-
-            assertThat(game.getGameID())
-                    .isEqualTo("game1");
-            assertThat(game.getStatus())
-                    .isEqualTo("OPEN");
-            
-
-            game = gameTransfer.SubmitMove(ctx, "game1", "player1", "rock");
-
-            assertThat(game.getPlayer1())
-                    .isEqualTo("player1");
-            assertThat(game.getPlayer1Move())
-                    .isEqualTo("rock");
-            assertThat(game.getPlayer2())
-                    .isNull();
-
-            game = gameTransfer.SubmitMove(ctx, "game1", "player2", "paper");
-
-            assertThat(game.getPlayer1())
-                    .isEqualTo("player2");
-            assertThat(game.getPlayer1Move())
-                    .isEqualTo("paper");
-
-            System.out.println("DONE");
+            assertThat(game).isEqualTo(game);
         }
 
+        @Test
+        public void isSymmetric() {
+            Game gameA = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+            Game gameB = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+
+            assertThat(gameA).isEqualTo(gameB);
+            assertThat(gameB).isEqualTo(gameA);
+        }
+
+        @Test
+        public void isTransitive() {
+            Game gameA = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+            Game gameB = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+            Game gameC = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+
+
+            assertThat(gameA).isEqualTo(gameB);
+            assertThat(gameB).isEqualTo(gameC);
+            assertThat(gameA).isEqualTo(gameC);
+        }
+
+        @Test
+        public void handlesInequality() {
+            Game gameA = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+            Game gameB = new Game("Game2", "player1", "player2", "rock", "paper", "OPEN", "player2");
+
+            assertThat(assetA).isNotEqualTo(assetB);
+        }
+
+        @Test
+        public void handlesOtherObjects() {
+            Game gameA = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+            String assetB = "not a game";
+
+            assertThat(gameA).isNotEqualTo(assetB);
+        }
+
+        @Test
+        public void handlesNull() {
+            Game game = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+
+            assertThat(game).isNotEqualTo(null);
+        }
     }
 
+    @Test
+    public void toStringIdentifiesAsset() {
+        Game game = new Game("Game1", "player1", "player2", "rock", "paper", "OPEN", "player2");
+
+        assertThat(asset.toString()).isEqualTo("Game@e04f6c53 [GAMEID=asset1, color=Blue, size=20, owner=Guy, appraisedValue=100]");
+    }
 }

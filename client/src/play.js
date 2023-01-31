@@ -95,9 +95,9 @@ export function Player(props) {
                         setMove(value);
                     }} 
                     >
-                    <FormControlLabel value="rock" control={<Radio disabled={!gameInProgress || moveSubmitted}/>} label="Rock" />
-                    <FormControlLabel value="paper" control={<Radio disabled={!gameInProgress || moveSubmitted}/>} label="Paper" />
-                    <FormControlLabel value="scissors" control={<Radio disabled={!gameInProgress || moveSubmitted}/>} label="Scissors" />
+                    <FormControlLabel value="1" control={<Radio disabled={!gameInProgress || moveSubmitted}/>} label="Rock" />
+                    <FormControlLabel value="2" control={<Radio disabled={!gameInProgress || moveSubmitted}/>} label="Paper" />
+                    <FormControlLabel value="3" control={<Radio disabled={!gameInProgress || moveSubmitted}/>} label="Scissors" />
                 </RadioGroup>
              </FormControl>
              <br></br><br></br>
