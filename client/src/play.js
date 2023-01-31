@@ -8,25 +8,31 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import Axios from "axios";
 
+// TODO: Change radio button values to be 1,2,3
+
 export function Player(props) {
     let player = props.name;
     let org = props.org;
 
-    const [moveSubmitted, setMoveSumbitted] = useState(true);
-    const [gameInProgress, setGameInProgress] = useState(true);
+    const [moveSubmitted, setMoveSumbitted] = useState(false);
+    const [gameInProgress, setGameInProgress] = useState(false);
     const [selectedMove, setMove] = useState(null);
     const [gameID, setGameID] = useState(null);
+    const [winner, setWinner] = useState(null);
 
     useEffect(() => {
-        const interval = setInterval(getStatus,1000)
+        const interval = setInterval(getStatus,500);
+        console.log("Move submitted: " + moveSubmitted + " Game in progress: " + gameInProgress);
 
-        return()=>clearInterval(interval)
+
+        return() => clearInterval(interval);
     }, []);
 
     const getStatus = async () => {
         Axios.get('http://localhost:3001/api/gameInProgress/' + org).then((response) => {
             setGameInProgress(response.data.inProgress);
             setGameID(response.data.id);
+            setWinner(response.data.winner);
             setMoveSumbitted(response.data.moveSubmitted);
             console.log(response.data);
         }).catch(err => console.log("Error "));
@@ -43,7 +49,6 @@ export function Player(props) {
             org: org,
             move: selectedMove
         });
-        setMoveSumbitted(false);
     }
 
     function createGame() {
@@ -51,19 +56,24 @@ export function Player(props) {
             user: player, 
             org: org
         }).then((response) => {
-            setGameInProgress(true);
             setGameID(response.data.id)
         });
     }
 
     function ShowGameId() {
-        if(gameInProgress) {
-           return(
-            <h1> Game ID: {gameID} </h1>
-           )
+        if(gameInProgress || winner) {
+            return(
+                <div>
+                <h1> Game ID: {gameID} </h1>
+                <h1> Winner: {winner}</h1>
+                </div>
+               )
         } else {
             return(
-                <h1> No game in progress </h1>
+                <div>
+                    <h1> No game in progress </h1>
+                    <br></br>
+                </div>
             )
         }
     }
@@ -93,6 +103,7 @@ export function Player(props) {
              <br></br><br></br>
             <Button variant="contained"
             onClick={submitMove} 
+            // if no game in progress AND 
             disabled={!gameInProgress || moveSubmitted}>Submit Move</Button>
         </div>
     );
