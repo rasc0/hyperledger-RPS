@@ -7,7 +7,7 @@ const { buildCCPOrg1, buildCCPOrg2, buildWallet } = require('../util.js');
 const { createGame } = require('../createGame');
 const { submitMove } = require('../submitMove');
 const { playGame } = require('../playGame');
-const { Wallets } = require('fabric-network');
+const { Wallets, Gateway } = require('fabric-network');
 const path = require('path');
 var cors = require('cors');
 const bp = require('body-parser')
@@ -30,6 +30,9 @@ let gameInProgress = false;
 let org1Move = false;
 let org2Move = false; 
 
+let gateway1, gateway2;
+
+let status, winner;
 
 async function init() {
   console.log("---------- Building ccps ----------");
@@ -52,40 +55,52 @@ async function init() {
   await registerOrg1User("player1");
 
   await registerOrg2User("player2");
+
+  gateway1 = new Gateway();
+  gateway2 = new Gateway();
+
+  await gateway1.connect(ccp1,
+    { wallet: walletOrg1, identity: "player1", discovery: { enabled: true, asLocalhost: true } });
+
+  await gateway2.connect(ccp2,
+    { wallet: walletOrg2, identity: "player2", discovery: { enabled: true, asLocalhost: true } });
+
+
   console.log("---------- Init done ----------");
 }
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   init();
   console.log(`Server listening on ${PORT}`);
 });
 
-app.get("/api", (req, res) => {
-    res.json({ message: "Hello from server!" });
-});
+process.on('SIGTERM', () => {
+  gateway1.disconnect();
+  gateway2.disconnect();
+  debug('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    debug('HTTP server closed');
+  })
+})
 
 // Create game
 app.post("/api/createGame", async (req, res) => {
-  console.log("CREATING GAME");
   if(gameInProgress) {
     console.log("Game in already in progress... " + gameID);
     return;
   }
 
   gameInProgress = true;
+  status = "open";
   gameID = "game" + gameIndex;
+  winner = null;
 
   let org = req.body.org;
-  let user = req.body.user;
-
-  console.log(org);
-  console.log(user);
-  console.log(gameID);
 
   if(org == "org1") {
-    await createGame(ccp1, walletOrg1, user, gameID);
+    await createGame(gateway1, gameID);
   } else {
-    await createGame(ccp2, walletOrg2, user, gameID);
+    await createGame(gateway2, gameID);
   }
 
   console.log("Game created: " + gameID);
@@ -102,24 +117,27 @@ app.post("/api/submitMove", async (req, res) => {
 
   if(org == "org1") {
     org1Move = true;
-    await submitMove(ccp1, walletOrg1, user, gameID, move);
+    await submitMove(gateway1, user, gameID, move);
   } else {
     org2Move = true;
-    await submitMove(ccp2, walletOrg2, user, gameID, move);
+    await submitMove(gateway2, user, gameID, move);
   }
 
   gameIndex++;
 
   if(org1Move && org2Move) {
     gameInProgress = false;
-    console.log("PLAYING GAME");
+    status = "played";
     org1Move = false;
-    org2Move = true;
+    org2Move = false;
+
     if(org == "org1") {
-      await playGame(ccp1, walletOrg1, user, gameID);
+      winner = await playGame(gateway1, gameID);
     } else {
-      await playGame(ccp2, walletOrg2, user, gameID);
+      winner = await playGame(gateway2, gameID);
     }
+
+    console.log("WINNER: " + winner);
   }
 });
 
@@ -132,10 +150,9 @@ app.get("/api/gameInProgress/:org", async (req, res) => {
   let response = {
     inProgress: gameInProgress, 
     id: gameID,
-    moveSumbitted: played
+    moveSubmitted: played,
+    winner: (status == "played"? winner : null)
   };
 
   res.send(response);
 });
-
-app.get("/api/")

@@ -1,33 +1,27 @@
 'use strict';
 
-const { Gateway } = require('fabric-network');
-const path = require('path');
 const { myChaincodeName, myChannel, prettyJSONString } = require('./util.js');
 
-async function playGame(ccp,wallet,user,gameID) {
+async function playGame(gateway, gameID) {
 	try {
-
-		const gateway = new Gateway();
-
-		// Connect using Discovery enabled
-		await gateway.connect(ccp,
-			{ wallet: wallet, identity: user, discovery: { enabled: true, asLocalhost: true } });
-
 		const network = await gateway.getNetwork(myChannel);
 		const contract = network.getContract(myChaincodeName);
 
-		console.log('\n--> Submit Transaction: Play game');
+		console.log('\n--> PLAYING GAME');
 		let result = await contract.submitTransaction('PlayGame', gameID);
-		console.log('*** Result: committed');
 
-		console.log('\n--> Evaluate Transaction: query the game that was just modified');
 		result = await contract.evaluateTransaction('QueryGame', gameID);
+
 		console.log(`*** Result: ${prettyJSONString(result.toString())}`)
+
+		console.log("\n--> GAME PLAYED:\n");
+
+		const jsonWinner = JSON.parse(result.toString());
+
+		return jsonWinner["winner"];
 
 	} catch (error) {
 		console.error(`******** FAILED to play Game: ${error}`);
-	} finally {
-		gateway.disconnect();
 	}
 }
 
