@@ -4,4 +4,8 @@
 </file>
 <file name="/Users/oscar/go/src/fabric-samples/rps/chaincode-java/src/main/java/org/hyperledger/fabric/samples/assettransfer/GameTransfer.java">
 </file>
+<file name="/Users/oscar/go/src/fabric-samples/rps/chaincode-java/src/main/java/org/hyperledger/fabric/samples/assettransfer/IncorrectMoveException.java">
+</file>
+<file name="/Users/oscar/go/src/fabric-samples/rps/chaincode-java/src/main/java/org/hyperledger/fabric/samples/assettransfer/PrivateMove.java">
+</file>
 </checkstyle>

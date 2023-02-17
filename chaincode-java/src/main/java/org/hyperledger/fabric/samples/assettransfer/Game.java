@@ -15,16 +15,10 @@ public final class Game {
     private final String gameID;
 
     @Property()
-    private String player1;
+    private String org1Move;
 
     @Property()
-    private String player2;
-
-    @Property()
-    private int player1Move;
-
-    @Property()
-    private int player2Move;
+    private String org2Move;
 
     @Property()
     private String status;
@@ -36,20 +30,12 @@ public final class Game {
         return gameID;
     }
 
-    public String getPlayer1() {
-        return player1;
+    public String getOrg1Move() {
+        return org1Move;
     }
 
-    public String getPlayer2() {
-        return player2;
-    }
-
-    public int getPlayer1Move() {
-        return player1Move;
-    }
-
-    public int getPlayer2Move() {
-        return player2Move;
+    public String getOrg2Move() {
+        return org2Move;
     }
 
     public String getStatus() {
@@ -68,20 +54,12 @@ public final class Game {
         this.status = newStatus;
     }
 
-    public void setPlayer1(final String newPlayer) {
-        this.player1 = newPlayer;
+    public void setOrg1Move(final String newMove) {
+        this.org1Move = newMove;
     }
 
-    public void setPlayer2(final String newPlayer) {
-        this.player2 = newPlayer;
-    }
-
-    public void setPlayer1Move(final int newMove) {
-        this.player1Move = newMove;
-    }
-
-    public void setPlayer2Move(final int newMove) {
-        this.player2Move = newMove;
+    public void setOrg2Move(final String newMove) {
+        this.org2Move = newMove;
     }
 
     public Game(@JsonProperty("gameID") final String gameID, @JsonProperty("status") final String status) {
@@ -90,17 +68,13 @@ public final class Game {
     }
 
     public Game(@JsonProperty("gameID") final String gameID,
-    @JsonProperty("player1") final String player1,
-    @JsonProperty("player2") final String player2,
-    @JsonProperty("player1Move") final int player1Move,
-    @JsonProperty("player2Move") final int player2Move,
+    @JsonProperty("org1Move") final String player1Move,
+    @JsonProperty("org2Move") final String player2Move,
     @JsonProperty("status") final String status,
     @JsonProperty("winner") final String winner) {
         this.gameID = gameID;
-        this.player1 = player1;
-        this.player2 = player2;
-        this.player1Move = player1Move;
-        this.player2Move = player2Move;
+        this.org1Move = player1Move;
+        this.org2Move = player2Move;
         this.status = status;
         this.winner = winner;
     }
@@ -118,26 +92,20 @@ public final class Game {
         Game other = (Game) obj;
 
         return Objects.deepEquals(
-                new String[] {getGameID(), getPlayer1(), getPlayer2(), getStatus(), getWinner()},
-                new String[] {other.getGameID(), other.getPlayer1(), other.getPlayer2(), other.getStatus(), other.getWinner()})
-                &&
-                Objects.deepEquals(
-                new int[] {getPlayer1Move(), getPlayer2Move()},
-                new int[] {other.getPlayer1Move(), other.getPlayer2Move()});
+                new String[] {getGameID(), getStatus(), getWinner(), getOrg1Move(), getOrg2Move()},
+                new String[] {other.getGameID(), other.getStatus(), other.getWinner(), other.getOrg1Move(), other.getOrg2Move()});
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getGameID(), getPlayer1(), getPlayer2(), getStatus(), getWinner());
+        return Objects.hash(getGameID(),  getStatus(), getWinner());
     }
 
     @Override
     public String toString() {
         return this.getClass().getSimpleName() +  "\nGAMEID: " + gameID
-        + "\nPlayer1: " + player1
-        + "\nPlayer1 Move: " + this.player1Move
-        + "\nPlayer2: " + player2
-        + "\nPlayer2 Move: " + this.player2Move
+        + "\nOrg1 Move: " + this.org1Move
+        + "\nOrg2 Move: " + this.org2Move
         + "\nStatus: " + status
         + "\nWinner: " + winner + "\n";
     }
