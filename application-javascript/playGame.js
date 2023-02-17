@@ -1,12 +1,9 @@
 'use strict';
 
-const { myChaincodeName, myChannel, prettyJSONString } = require('./util.js');
+const { prettyJSONString } = require('./util.js');
 
-async function playGame(gateway, gameID) {
+async function playGame(contract, gameID) {
 	try {
-		const network = await gateway.getNetwork(myChannel);
-		const contract = network.getContract(myChaincodeName);
-
 		console.log('\n--> PLAYING GAME');
 		let result = await contract.submitTransaction('PlayGame', gameID);
 

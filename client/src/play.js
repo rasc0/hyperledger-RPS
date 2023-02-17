@@ -8,7 +8,6 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import Axios from "axios";
 
-// TODO: Change radio button values to be 1,2,3
 
 export function Player(props) {
     let player = props.name;
@@ -21,7 +20,7 @@ export function Player(props) {
     const [winner, setWinner] = useState(null);
 
     useEffect(() => {
-        const interval = setInterval(getStatus,500);
+        const interval = setInterval(getStatus,1);
         console.log("Move submitted: " + moveSubmitted + " Game in progress: " + gameInProgress);
 
 
@@ -61,14 +60,22 @@ export function Player(props) {
     }
 
     function ShowGameId() {
-        if(gameInProgress || winner) {
+        if(gameInProgress && moveSubmitted) {
+            return(
+                <div>
+                    <h1> Calculating {gameID} </h1>
+                    <br></br>
+                    <br></br>
+                </div>
+            )
+        }else if(gameInProgress || winner) {
             return(
                 <div>
                 <h1> Game ID: {gameID} </h1>
                 <h1> Winner: {winner}</h1>
                 </div>
                )
-        } else {
+        } else if(!gameInProgress && !winner) {
             return(
                 <div>
                     <h1> No game in progress </h1>

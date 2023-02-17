@@ -1,14 +1,10 @@
 'use strict';
 
-const { Gateway } = require('fabric-network');
-const { myChaincodeName, myChannel, prettyJSONString } = require('./util.js');
+const { prettyJSONString } = require('./util.js');
 
-async function createGame(gateway ,gameID) {
+async function createGame(contract ,gameID) {
 
 	try {
-		const network = await gateway.getNetwork(myChannel);
-		const contract = network.getContract(myChaincodeName);
-
 		console.log('\n--> CREATING GAME');
 		await contract.submitTransaction('CreateGame', gameID);
 

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const myChannel = 'bravo';
+const myChannel = 'delta';
 const myChaincodeName = 'rps';
 
 const buildCCPOrg1 = () => {

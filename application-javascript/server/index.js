@@ -3,16 +3,19 @@
 const express = require("express");
 const { connectToOrg1CA, connectToOrg2CA } = require('../enrollAdmin.js');
 const { registerOrg1User, registerOrg2User } = require('../registerEnrollUser');
-const { buildCCPOrg1, buildCCPOrg2, buildWallet } = require('../util.js');
+const { buildCCPOrg1, buildCCPOrg2, buildWallet, myChaincodeName, myChannel } = require('../util.js');
 const { createGame } = require('../createGame');
 const { submitMove } = require('../submitMove');
 const { playGame } = require('../playGame');
+const { revealMove } = require('../revealMove');
 const { Wallets, Gateway } = require('fabric-network');
 const path = require('path');
 var cors = require('cors');
 const bp = require('body-parser')
 
 const PORT = process.env.PORT || 3001;
+
+//TODO: STATUSES: ENUM FOR OPEN, CLOSED, END
 
 const app = express();
 app.use(cors());
@@ -31,6 +34,8 @@ let org1Move = false;
 let org2Move = false; 
 
 let gateway1, gateway2;
+let network1, network2;
+let contract1, contract2;
 
 let status, winner;
 
@@ -62,9 +67,16 @@ async function init() {
   await gateway1.connect(ccp1,
     { wallet: walletOrg1, identity: "player1", discovery: { enabled: true, asLocalhost: true } });
 
+  network1 = await gateway1.getNetwork(myChannel);
+  contract1 = network1.getContract(myChaincodeName);
+  contract1.addDiscoveryInterest({ name: myChaincodeName, collectionNames: ['Org1MSPPrivateCollection'] });
+
   await gateway2.connect(ccp2,
     { wallet: walletOrg2, identity: "player2", discovery: { enabled: true, asLocalhost: true } });
-
+  
+  network2 = await gateway2.getNetwork(myChannel);
+  contract2 = network2.getContract(myChaincodeName);
+  contract2.addDiscoveryInterest({ name: myChaincodeName, collectionNames: ['Org2MSPPrivateCollection'] });
 
   console.log("---------- Init done ----------");
 }
@@ -98,12 +110,11 @@ app.post("/api/createGame", async (req, res) => {
   let org = req.body.org;
 
   if(org == "org1") {
-    await createGame(gateway1, gameID);
+    await createGame(contract1, gameID);
   } else {
-    await createGame(gateway2, gameID);
+    await createGame(contract2, gameID);
   }
 
-  console.log("Game created: " + gameID);
   res.send({id: gameID});
 });
 
@@ -117,25 +128,23 @@ app.post("/api/submitMove", async (req, res) => {
 
   if(org == "org1") {
     org1Move = true;
-    await submitMove(gateway1, user, gameID, move);
+    await submitMove(contract1, gameID, move);
   } else {
     org2Move = true;
-    await submitMove(gateway2, user, gameID, move);
+    await submitMove(contract2, gameID, move);
   }
 
-  gameIndex++;
-
   if(org1Move && org2Move) {
+    await revealMove(contract1, gameID);
+    await revealMove(contract2, gameID);
+
+    winner = await playGame(contract1, gameID);
+
     gameInProgress = false;
     status = "played";
     org1Move = false;
     org2Move = false;
-
-    if(org == "org1") {
-      winner = await playGame(gateway1, gameID);
-    } else {
-      winner = await playGame(gateway2, gameID);
-    }
+    gameIndex++;
 
     console.log("WINNER: " + winner);
   }
