@@ -78,6 +78,13 @@ async function init() {
   contract2 = network2.getContract(myChaincodeName);
   contract2.addDiscoveryInterest({ name: myChaincodeName, collectionNames: ['Org2MSPPrivateCollection'] });
 
+  gameInProgress = true;
+  status = "open";
+  gameID = "game" + gameIndex;
+  winner = null;
+
+  await createGame(contract1, gameID);
+
   console.log("---------- Init done ----------");
 }
 
@@ -123,8 +130,7 @@ app.post("/api/submitMove", async (req, res) => {
   const org = req.body.org;
   const user = req.body.user;
   const move = req.body.move;
-  console.log("Move submitted by:" + user);
-  console.log(move);
+  console.log("Move submitted by: " + user + " (" + org + ")");
 
   if(org == "org1") {
     org1Move = true;

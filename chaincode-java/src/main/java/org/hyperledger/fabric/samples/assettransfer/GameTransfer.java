@@ -73,90 +73,24 @@ public final class GameTransfer implements ContractInterface {
         return response;
     }
 
-    @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public void RevealMove(final Context ctx, final String gameID) {
+    @Transaction(intent = Transaction.TYPE.EVALUATE)
+    public String QueryGame(final Context ctx, final String gameID) {
         ChaincodeStub stub = ctx.getStub();
 
-        Game game = getState(ctx, gameID);
+        String gameJSON = stub.getStringState(gameID);
+        System.out.println("Serialized JSON: " + gameJSON);
 
-        byte[] moveBytes;
-        PrivateMove privateMove;
-        String pubHash; // public ledger hash
-
-        String clientMSPID = ctx.getClientIdentity().getMSPID();
-        String peerMSPID = ctx.getStub().getMspId();
-
-        System.out.println("CLIENT MSPID: "  + clientMSPID);
-        System.out.println("PEER MSPID: " + peerMSPID);
-
-        verifyClientOrgMatchesPeerOrg(ctx);
-
-        // Get the player's moves and get the hashes (receipts) from public ledger
-        if (peerMSPID.equals(ORG1)) {
-            moveBytes = stub.getPrivateData("Org1MSPPrivateCollection", gameID);
-            privateMove = genson.deserialize(moveBytes, PrivateMove.class);
-            pubHash = game.getOrg1Move();
-        } else {
-            moveBytes = stub.getPrivateData("Org2MSPPrivateCollection", gameID);
-            privateMove = genson.deserialize(moveBytes, PrivateMove.class);
-            pubHash = game.getOrg2Move();
+        if (gameJSON == null || gameJSON.isEmpty()) {
+            String errorMessage = String.format("Game %s does not exist", gameID);
+            System.out.println(errorMessage);
+            throw new ChaincodeException(errorMessage);
         }
 
-        // Verify that the hash on the public ledger aligns with private move
-        try {
-            System.out.println("Checking hash for " + peerMSPID + ": " + pubHash);
-            checkHash(privateMove, pubHash);
-        } catch (IncorrectMoveException e) {
-            System.out.println("Exception: " + e);
-            game.setStatus("ERROR");
-            //return;
-            System.out.println("Check failed. Would return here");
-        }
+        Game game = genson.deserialize(gameJSON, Game.class);
 
-        // Make the move publicly visible
-        if (peerMSPID.equals(ORG1)) {
-            game.setOrg1Move(Integer.toString(privateMove.getMove()));
-        } else {
-            game.setOrg2Move(Integer.toString(privateMove.getMove()));
-        }
+        System.out.println("Deserialized game: " + game.toString());
 
-        game.setStatus("CLOSED");
-
-        String gameJson = genson.serialize(game);
-
-        stub.putStringState(gameID, gameJson);
-    }
-
-    @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public void PlayGame(final Context ctx, final String gameID) {
-        ChaincodeStub stub = ctx.getStub();
-
-        Game game = getState(ctx, gameID);
-
-        //  (1 = Rock, 2 = Paper, 3 = Scissors)
-        int p1move = Integer.parseInt(game.getOrg1Move());
-        int p2move = Integer.parseInt(game.getOrg2Move());
-
-        int[][] result = {{0, 2, 1},
-                        {1, 0, 2},
-                        {2, 1, 0}
-                        };
-
-        int outcome = result[p1move - 1][p2move - 1];
-
-        if (outcome == 0) {
-            game.setWinner("TIE");
-          } else if (outcome == 1) {
-            game.setWinner("ORG 1");
-          } else {
-            game.setWinner("ORG 2");
-          }
-
-        game.setStatus("PLAYED");
-
-        String gameJson = genson.serialize(game);
-
-        stub.putStringState(gameID, gameJson);
+        return game.toString();
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
@@ -182,18 +116,14 @@ public final class GameTransfer implements ContractInterface {
             System.out.println("NO ORG FOUND");
         }
 
-        System.out.println("Collection: " + collectionName);
-
         // Calculate random salt:
         int salt = ThreadLocalRandom.current().nextInt();
-        System.out.println("Salt value is: " + salt);
 
         // Create a hash of the move + salt
         String hash = null;
 
         try {
             hash = createHash(Integer.toString(move + salt));
-            System.out.println("HASH: " + hash);
         } catch (NoSuchAlgorithmException e) {
             System.out.println("Exception: " + e);
         }
@@ -206,38 +136,101 @@ public final class GameTransfer implements ContractInterface {
         // Create JSON to store into private collection (move, salt) with GameID as the key
         PrivateMove privateMove = new PrivateMove(move, salt);
 
-        byte[] moveBytes = genson.serializeBytes(privateMove);
+        byte[] privateMoveBytes = genson.serializeBytes(privateMove);
 
-        // Add to private collection
-        stub.putPrivateData(collectionName, gameID, moveBytes);
+        stub.putPrivateData(collectionName, gameID, privateMoveBytes);
 
         // Add hash as move to public ledger
+        game.setMove(peerMSPID, hash);
+
+        String gameJson = genson.serialize(game);
+
+        System.out.println(gameJson);
+
+        stub.putStringState(gameID, gameJson);
+    }
+
+    @Transaction(intent = Transaction.TYPE.SUBMIT)
+    public void RevealMove(final Context ctx, final String gameID) {
+        ChaincodeStub stub = ctx.getStub();
+
+        Game game = getState(ctx, gameID);
+
+        System.out.println("Game fetched: \n" + game);
+
+        byte[] moveBytes;
+        PrivateMove privateMove;
+        String pubHash; // public ledger hash
+
+        String clientMSPID = ctx.getClientIdentity().getMSPID();
+        String peerMSPID = ctx.getStub().getMspId();
+
+        System.out.println("CLIENT MSPID: "  + clientMSPID);
+        System.out.println("PEER MSPID: " + peerMSPID);
+
+        verifyClientOrgMatchesPeerOrg(ctx);
+
+        // Get the player's moves and get the hashes (receipts) from public ledger
         if (peerMSPID.equals(ORG1)) {
-            game.setOrg1Move(hash);
-        } else if (peerMSPID.equals(ORG2)) {
-            game.setOrg2Move(hash);
+            moveBytes = stub.getPrivateData("Org1MSPPrivateCollection", gameID);
+            privateMove = genson.deserialize(moveBytes, PrivateMove.class);
+            pubHash = game.getMove(ORG1);
+        } else {
+            moveBytes = stub.getPrivateData("Org2MSPPrivateCollection", gameID);
+            privateMove = genson.deserialize(moveBytes, PrivateMove.class);
+            pubHash = game.getMove(ORG2);
         }
+
+        // Verify that the hash on the public ledger aligns with private move
+        try {
+            System.out.println("Checking hash for " + peerMSPID + ": " + pubHash);
+            checkHash(privateMove, pubHash);
+        } catch (IncorrectMoveException e) {
+            System.out.println("Exception: " + e);
+            game.setStatus("ERROR");
+            return;
+        }
+
+        // Make the move publicly visible
+        game.setMove(peerMSPID, Integer.toString(privateMove.getMove()));
+
+        game.setStatus("CLOSED");
 
         String gameJson = genson.serialize(game);
 
         stub.putStringState(gameID, gameJson);
     }
 
-    @Transaction(intent = Transaction.TYPE.EVALUATE)
-    public Game QueryGame(final Context ctx, final String gameID) {
+    @Transaction(intent = Transaction.TYPE.SUBMIT)
+    public void PlayGame(final Context ctx, final String gameID) {
         ChaincodeStub stub = ctx.getStub();
 
-        String gameJSON = stub.getStringState(gameID);
+        Game game = getState(ctx, gameID);
 
-        if (gameJSON == null || gameJSON.isEmpty()) {
-            String errorMessage = String.format("Game %s does not exist", gameID);
-            System.out.println(errorMessage);
-            throw new ChaincodeException(errorMessage);
-        }
+        //  (1 = Rock, 2 = Paper, 3 = Scissors)
+        int p1move = Integer.parseInt(game.getMove(ORG1));
+        int p2move = Integer.parseInt(game.getMove(ORG2));
 
-        Game game = genson.deserialize(gameJSON, Game.class);
+        int[][] result = {{0, 2, 1},
+                        {1, 0, 2},
+                        {2, 1, 0}
+                        };
 
-        return game;
+        int outcome = result[p1move - 1][p2move - 1];
+
+        if (outcome == 0) {
+            game.setWinner("TIE");
+          } else if (outcome == 1) {
+            game.setWinner("ORG 1");
+          } else {
+            game.setWinner("ORG 2");
+          }
+
+        game.setStatus("PLAYED");
+
+        String gameJson = genson.serialize(game);
+
+        stub.putStringState(gameID, gameJson);
     }
 
     private String createHash(final String inputString) throws NoSuchAlgorithmException {
