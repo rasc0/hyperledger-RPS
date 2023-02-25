@@ -3,12 +3,12 @@ Ensure that Hyperledger Fabric is installed: https://hyperledger-fabric.readthed
 
 Make sure to install the Fabric-Samples folder.
 
-Once installed, add this repository to the Fabric-Samples folder such that:
+Once installed, add this repository to the Fabric-Samples folder such that /rps and /test-network are both in /fabric-samples:
 
 Fabric-Samples/
-|-test-network/
-|-rps/
-|-...
+<br>&nbsp;&nbsp;&nbsp;&nbsp;|-test-network/
+<br>&nbsp;&nbsp;&nbsp;&nbsp;|-rps/
+<br>&nbsp;&nbsp;&nbsp;&nbsp;|-...
 
 ## To Run:
 
