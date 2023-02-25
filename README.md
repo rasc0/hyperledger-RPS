@@ -12,22 +12,30 @@ Fabric-Samples/
 
 ## To Run:
 
-# In fabric-samples/test-network - deploy test network
-cd ../test-network
+### In fabric-samples/test-network - deploy test network
+<code>
+cd /test-network
 ./network.sh down
 ./network.sh up createChannel -ca 
+</code>
 
-# Optionally, in another tab, deploy the docker monitoring script in fabric-samples/test-network
+##### Optionally, in another tab, deploy the docker monitoring script in fabric-samples/test-network
+<code>
 ./monitordocker.sh
+</code>
 
-# Deploy chaincode
+### Deploy chaincode
+<code>
 ./network.sh deployCC -ccn rps -ccp ../rps/chaincode-java -ccl java -ccep "OR('Org1MSP.peer','Org2MSP.peer')" -verbose -cccg ../rps/chaincode-java/collections-config.json
+</code>
 
-./network.sh deployCC -ccn rps -ccp ../rps/chaincode-java -ccl java -ccep "AND('Org1MSP.peer','Org2MSP.peer')" -verbose -cccg ../rps/chaincode-java/collections-config.json
-
-# In a new tab start the node server in rps/application-javascript
+### In a new tab start the node server in rps/application-javascript
+<code>
 npm start
+</code>
 
-# In a new tab start react front end client in rps/client
-# this should automatically open http://localhost:8000 which will provide 2 links, one to each org's player
+### In a new tab start react front end client in rps/client
+#### this should automatically open http://localhost:8000 which will provide 2 links, one to each org's player
+<code>
 npm start
+</code>
