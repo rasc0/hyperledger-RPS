@@ -1,7 +1,5 @@
 'use strict';
 
-const { prettyJSONString } = require('./util.js');
-
 async function revealMove(contract, gameID) {
 	try {
 		console.log('\n--> REVEALING MOVE');
@@ -9,7 +7,7 @@ async function revealMove(contract, gameID) {
 
 		result = await contract.evaluateTransaction('QueryGame', gameID);
 
-		console.log(`*** Result: ${prettyJSONString(result.toString())}`)
+		console.log(`*** Result: ${result}`)
 
 		console.log("\n--> MOVE REVEALED\n");
 

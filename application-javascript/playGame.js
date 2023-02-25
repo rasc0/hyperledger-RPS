@@ -5,17 +5,23 @@ const { prettyJSONString } = require('./util.js');
 async function playGame(contract, gameID) {
 	try {
 		console.log('\n--> PLAYING GAME');
-		let result = await contract.submitTransaction('PlayGame', gameID);
+		await contract.submitTransaction('PlayGame', gameID);
 
-		result = await contract.evaluateTransaction('QueryGame', gameID);
+		const result = await contract.evaluateTransaction('QueryGame', gameID);
 
-		console.log(`*** Result: ${prettyJSONString(result.toString())}`)
+		console.log(`*** Result: ${result}`)
 
 		console.log("\n--> GAME PLAYED:\n");
 
-		const jsonWinner = JSON.parse(result.toString());
+		const winnerRegex = /Winner:\s+(ORG\s+1|ORG\s+2|TIE)/i;
+		const winnerMatch = result.toString().match(winnerRegex);
 
-		return jsonWinner["winner"];
+		if (winnerMatch) {
+			const winner = winnerMatch[1].trim().toUpperCase();
+			return winner;
+		} else {
+			console.log('No winner found');
+		}
 
 	} catch (error) {
 		console.error(`******** FAILED to play Game: ${error}`);

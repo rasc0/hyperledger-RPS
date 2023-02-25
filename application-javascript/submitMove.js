@@ -1,7 +1,5 @@
 'use strict';
 
-const { prettyJSONString } = require('./util.js');
-
 async function submitMove(contract, gameID, move) {
 	try {
 
@@ -10,7 +8,7 @@ async function submitMove(contract, gameID, move) {
 
 		let result = await contract.evaluateTransaction('QueryGame', gameID);
 
-		console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+		console.log(`*** Result: ${result}`);
 
 		console.log("\n--> MOVE SUBMITTED");
 
